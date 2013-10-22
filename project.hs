@@ -10,7 +10,7 @@ data Property = Name | Phones | Address | DoB
 data Person = Person Name Phones Address DoB deriving Show
 data PhoneBook = PhoneBook [Person]
 
-jim = Person "Jim" [("mobile", "01234567890")] [] (25,2,82)
+jim = Person "Jim" [("mobile", "01234567890"), ("home", "981287673687572378")] [] (25,2,82)
 bob = Person "Bob" [] [("line1", "My House"), ("line2", "My Street")] (0,0,0)
 
 pb = PhoneBook [jim, bob]
