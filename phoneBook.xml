@@ -1,0 +1,25 @@
+<person>
+    <name>Brianna Claire</name>
+</person>
+<person>
+    <name>John Sorensen</name>
+    <phones>
+        <mobile>07773459876</mobile>
+        <home>020824566756</home>
+    </phones>
+    <dob>07/08/1974</dob>
+</person>
+<person>
+    <name>Helena Smith</name>
+    <address>
+        <line1>Flat 8 New Tower Block</line1>
+        <postcode>E1 4NS</postcode>
+        <city>London</city>
+    </address>
+</person>
+<person>
+    <name>Steven McOwen</name>
+    <phones>
+        <mobile>07773459885</mobile>
+    </phones>
+</person>
