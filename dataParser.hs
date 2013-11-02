@@ -3,66 +3,96 @@ module DataParser where
 import DataStructure
 
 
+-- Parsing functions
+
+readPhoneBook :: String -> PhoneBook
+readPhoneBook = readPhoneBookRec [] -- Defer through to the recursive function with an empty starting array
+
+readPhoneBookRec :: [Person] -> String -> [Person]
+readPhoneBookRec people str = if checkTagInner "person" str -- Bail out if our string doesn't start with <person> (i.e. end of file)
+    then readPhoneBookRec (person:people) rest
+    else reverse people -- maintain order
+    where (person, rest) = parsePerson str
+
+
+parsePerson :: String -> (Person, String)
+parsePerson str = (Person {
+        name    = parsedName,
+        phones  = parsedPhones,
+        address = parsedAddress,
+        dob     = parsedDoB
+    }, nextXmlTag rest4)
+                          
+   where personDetails = nextXmlTag str -- Trim off the '<person>...' up to '<name>'
+         (parsedName,    rest1) = parseName    personDetails
+         (parsedPhones,  rest2) = parsePhones  rest1
+         (parsedAddress, rest3) = parseAddress rest2
+         (parsedDoB,     rest4) = parseDoB     rest3
+
+
+-- Simple parsing methods
+
+parseName :: String -> (Name, String)
+parseName = parseSimpleNodeContent "name"
+
+parseDoB :: String -> (DoB, String)
+parseDoB = parseSimpleNodeContent "dob"
+
+parseSimpleNodeContent :: String -> String -> (String, String)
+parseSimpleNodeContent nodeName str = if checkTagInner nodeName str -- Check that we are at the expected node
+    then getNodeContent str                                         -- Parse if correct
+    else ("", str)                                                  -- Otherwise skip straight on
+
+
+-- More involved parsing methods
+
+parsePhones :: String -> (Phones, String)
+parsePhones = parseNestedNodeContent "phones"
+
+parseAddress :: String -> (Address, String)
+parseAddress = parseNestedNodeContent "address"
+
+
+parseNestedNodeContent :: String -> String -> ([(String, String)], String)
+parseNestedNodeContent nodeName str = if checkTagInner nodeName str -- Only try to parse if we have the right tag
+    then parseNestedNodesRec nodeName [] (nextXmlTag str)           -- Defer through to the recursive parser
+    else ([], str)                                                  -- Or return an empty list 
+    
+-- Recursively collect (node name, node content) pairs
+parseNestedNodesRec :: String -> [(String, String)] -> String -> ([(String, String)], String)
+parseNestedNodesRec nodeName parsedNodes str = if checkTagInner ('/':nodeName) str  -- Bail out of parsing when we reach the end of our section
+    then (reverse parsedNodes, nextXmlTag str)
+    else parseNestedNodesRec nodeName (fst result:parsedNodes) (snd result)
+    where result = parseNode str
+
+
+-- Utility functions for scanning and reading xml tags
+
 notCloseTag :: Char -> Bool
 notCloseTag x = x /= '>'
 
 notOpenTag :: Char -> Bool
 notOpenTag x = x /= '<'
 
-parseNode :: String -> (String, String)
-parseNode (x:xs) = span notCloseTag xs
+-- Removes an xml tag and everything up to the next XML tag from the front of a string
+nextXmlTag :: String -> String
+nextXmlTag str = dropWhile notOpenTag $ dropWhile notCloseTag str
 
-parseSimpleNode :: String -> ((String, String), String)
-parseSimpleNode xs = ((fst node, fst value), dropWhile notOpenTag $ dropWhile notCloseTag $ snd value)
-    where node = parseNode xs
-          value = span notOpenTag $ tail $ snd node
+-- Get the name of the next xml node
+getNodeName :: String -> (String, String)
+getNodeName str = span notCloseTag $ tail $ dropWhile notOpenTag str
 
-parseName :: String -> (Name, String)
-parseName xs = if take 6 xs == "<name>" then (fst result, dropWhile notOpenTag $ dropWhile notCloseTag $ snd result) else ("", xs)
-    where result = span notOpenTag $ tail $ snd (parseNode xs)
+-- Get the content of the next xml tag
+getNodeContent :: String -> (String, String)
+getNodeContent str = (fst result, nextXmlTag $ snd result)
+    where result = span notOpenTag $ tail $ dropWhile notCloseTag str
 
-parsePhone :: String -> (Phone, String)
-parsePhone xs = parseSimpleNode xs
+-- Return the name and content of the next xml node
+parseNode :: String -> ((String, String), String)
+parseNode str = ((fst node, fst value), snd value)
+    where node = getNodeName str
+          value = getNodeContent str
 
-parsePhonesRec :: String -> [Phone] -> ([Phone], String)
-parsePhonesRec str ps = if take 9 str == "</phones>" then (ps, str) else parsePhonesRec (snd result) (ps ++ [fst result])
-    where result = parseSimpleNode str
-
-parsePhones :: String -> ([Phone], String)
-parsePhones str = if take 8 str == "<phones>" then (fst result, dropWhile notOpenTag $ dropWhile notCloseTag $ snd result) else ([], str)
-    where result = parsePhonesRec (dropWhile notOpenTag $ dropWhile notCloseTag str) []
-
-parseAddressLine :: String -> (AddressLine, String)
-parseAddressLine xs = parseSimpleNode xs
-
-parseAddressRec :: String -> [AddressLine] -> ([AddressLine], String)
-parseAddressRec str ls = if take 10 str == "</address>" then (ls, str) else parseAddressRec (snd result) (ls ++ [fst result])
-    where result = parseSimpleNode str
-
-parseAddress :: String -> ([AddressLine], String)
-parseAddress str = if take 9 str == "<address>" then (fst result, dropWhile notOpenTag $ dropWhile notCloseTag $ snd result) else ([], str)
-    where result = parseAddressRec (dropWhile notOpenTag $ dropWhile notCloseTag str) []
-
-parseDoB :: String -> (DoB, String)
-parseDoB xs = if take 5 xs == "<dob>" then (fst result, dropWhile notOpenTag $ dropWhile notCloseTag $ snd result) else ("", xs)
-    where result = span notOpenTag $ tail $ snd (parseNode xs)
-
-
-parsePerson :: String -> (Person, String)
-parsePerson xs = (Person { name = parsedName,
-                          phones = parsedPhones,
-                          address = parsedAddress,
-                          dob = parsedDoB }, dropWhile notOpenTag $ tail $ dropWhile notCloseTag rest4)
-   where personDetails = dropWhile notOpenTag $ tail $ snd $ parseNode xs
-         (parsedName, rest1) = parseName personDetails
-         (parsedPhones, rest2) = parsePhones rest1
-         (parsedAddress, rest3) = parseAddress rest2
-         (parsedDoB, rest4) = parseDoB rest3
-
-
-readPhoneBookRec :: String -> [Person] -> [Person]
-readPhoneBookRec str people = if take 8 str == "<person>" then readPhoneBookRec rest (people ++ [person]) else people
-   where (person, rest) = parsePerson str
-
-readPhoneBook :: String -> PhoneBook
-readPhoneBook str = PhoneBook (readPhoneBookRec str [])
+checkTagInner :: String -> String -> Bool
+checkTagInner expected str = (length str > 0) && found == expected
+    where found = fst $ getNodeName str

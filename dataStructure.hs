@@ -1,14 +1,24 @@
 module DataStructure where
-  type Name = String
-  type Phone = (String, String)
-  type Phones = [Phone]
-  type AddressLine = (String, String)
-  type Address = [AddressLine]
-  type DoB = String
 
-  data Person = Person { name :: Name
-                       , phones :: Phones
-                       , address :: Address
-                       , dob :: DoB } deriving (Eq, Show)
+-- Individual property synonyms
 
-  data PhoneBook = PhoneBook [Person] deriving Show
+type Name = String
+
+type Phone = (String, String)
+type Phones = [Phone]
+
+type AddressLine = (String, String)
+type Address = [AddressLine]
+
+type DoB = String
+
+-- Individual Person records
+
+data Person = Person { name :: Name
+                     , phones :: Phones
+                     , address :: Address
+                     , dob :: DoB } deriving (Eq, Show)
+
+-- PhoneBook is simply a collection of Person records
+
+type PhoneBook = [Person]
