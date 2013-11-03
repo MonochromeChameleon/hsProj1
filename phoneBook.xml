@@ -1,7 +1,4 @@
 <person>
-    <name>Brianna Claire</name>
-</person>
-<person>
     <name>John Sorensen</name>
     <phones>
         <mobile>07773459876</mobile>
@@ -22,4 +19,21 @@
     <phones>
         <mobile>07773459885</mobile>
     </phones>
+</person>
+<person>
+    <name>Someone</name>
+    <phones>
+        <mobile>012798575528</mobile>
+        <home>0285735873</home>
+        <fax>384275838838</fax>
+    </phones>
+    <address>
+        <line1>Somewhere</line1>
+        <line2>Over the rainbow</line2>
+        <city>Way up high</city>
+    </address>
+    <dob>12/12/12</dob>
+</person>
+<person>
+    <name>Hugh</name>
 </person>

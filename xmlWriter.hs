@@ -35,3 +35,7 @@ writePerson p = xout "person" $ (xoutName p) ++ (xoutPhones p) ++ (xoutAddress p
 
 writePhoneBook :: PhoneBook -> String
 writePhoneBook ps = concat (map writePerson ps)
+
+savePhoneBook :: PhoneBook -> IO()
+savePhoneBook pb = do
+    writeFile "phoneBook.xml" $ writePhoneBook pb
