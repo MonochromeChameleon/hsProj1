@@ -25,11 +25,6 @@ showHelp = do
     putStrLn "Press enter to exit"
     putStrLn ""
     
-displayXml :: PhoneBook -> IO()
-displayXml pb = do
-    putStrLn $ writePhoneBook pb
-    putStrLn ""
-    
 executeCommand :: PhoneBook -> String -> IO ()
 executeCommand pb cmd = do
     case (cmd!!0) of
