@@ -1,7 +1,7 @@
 module PersonAdder where
 
 import DataStructure
-import PersonEditor
+import EditDeleteHandler
 import UserInteraction
 
 

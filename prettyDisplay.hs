@@ -58,14 +58,3 @@ showAddress (line:address) = do
     putStrLn $ "  " ++ snd line
     showAddress address
     
-
--- IO: Display a numbered list of people
-
-listNames :: PhoneBook -> IO()
-listNames = listNamesRec 0 -- Call through to the recursive function with index 0
-
-listNamesRec :: Integer -> PhoneBook -> IO ()
-listNamesRec _ [] = putStr ""
-listNamesRec ix (person:people) = do
-    putStrLn $ (show (ix + 1)) ++ ": " ++ (name person)
-    listNamesRec (ix + 1) people

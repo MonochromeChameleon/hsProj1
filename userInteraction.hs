@@ -6,4 +6,3 @@ prompt str = do
     input <- getLine
     putStrLn ""
     return input
-

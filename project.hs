@@ -1,11 +1,11 @@
 import Control.Monad
+import Data.Char
 import System.IO
 
 import DataStructure
 import DataParser
+import EditDeleteHandler
 import PersonAdder
-import PersonDeleter
-import PersonEditor
 import PrettyDisplay
 import SearchHandler
 import UserInteraction
@@ -53,7 +53,8 @@ showHelp = do
     
 executeCommand :: PhoneBook -> String -> IO ()
 executeCommand pb cmd = do
-    case (cmd!!0) of
+    -- Case-insensitive just to make life easier
+    case (toLower $ cmd!!0) of
         's' -> doSearch pb
         'p' -> showPhoneBook pb
         'a' -> doAdd pb
