@@ -2,14 +2,15 @@ module SearchHandler where
 
 import DataStructure
 import PrettyDisplay
+import UserInteraction
+
+-- IO: Execute a search and display prettified matching results
 
 doSearch :: PhoneBook -> IO()
 doSearch pb = do
     putStrLn "Who do you want to search for?"
 
-    putStr "Search ~> "
-    searchTerm <- getLine
-    putStrLn ""
+    searchTerm <- prompt "Search"
     
     if (inPhoneBook pb searchTerm) then
         showPhoneBook $ findPerson pb searchTerm

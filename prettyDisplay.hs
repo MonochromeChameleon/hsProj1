@@ -4,7 +4,8 @@ module PrettyDisplay where
 import DataStructure
 
 
--- Recursive handler for displaying the entire phone book
+-- IO: Recursive handler for displaying the entire phone book
+
 showPhoneBook :: PhoneBook -> IO()
 showPhoneBook [] = do
     putStrLn "-------------------------" -- End of phone book delimiter
@@ -15,7 +16,8 @@ showPhoneBook (person:people) = do
     showPhoneBook people
     
 
--- Prettified display for an individual person
+-- IO: Prettified display for an individual person
+
 showPerson :: Person -> IO()
 showPerson person = do
     putStrLn "-------------------------" -- delimiter
@@ -37,17 +39,33 @@ showPerson person = do
         putStrLn $ "DoB: " ++ dob person
         putStrLn ""
     else putStrLn ""
+
         
--- Recursively show all phones as 'description: number'
+-- IO: Recursively show all phones as 'description: number'
+
 showPhones :: Phones -> IO()
 showPhones [] = do { putStr "" }
 showPhones (phone:phones) = do
     putStrLn $ "  " ++ (fst phone) ++ ": " ++ (snd phone)
     showPhones phones
 
--- Recursively show all lines in the address
+
+-- IO: Recursively show all lines in the address
+
 showAddress :: Address -> IO()
 showAddress [] = do { putStr "" }
 showAddress (line:address) = do
     putStrLn $ "  " ++ snd line
     showAddress address
+    
+
+-- IO: Display a numbered list of people
+
+listNames :: PhoneBook -> IO()
+listNames = listNamesRec 0 -- Call through to the recursive function with index 0
+
+listNamesRec :: Integer -> PhoneBook -> IO ()
+listNamesRec _ [] = putStr ""
+listNamesRec ix (person:people) = do
+    putStrLn $ (show (ix + 1)) ++ ": " ++ (name person)
+    listNamesRec (ix + 1) people
