@@ -1,4 +1,6 @@
 import Control.Monad
+import System.IO
+
 import DataStructure
 import DataParser
 import PersonAdder
@@ -10,8 +12,9 @@ import UserInteraction
 import XmlWriter
 
 main = do 
-    showHelp -- Display help text on startup, then go into the primary 'getCommand' loop.
-    getCommand
+    hSetBuffering stdout NoBuffering -- Lets us have a nice custom prompt so it's easier to know what you're doing.
+    showHelp                         -- Display help text on startup, then go into the primary 'getCommand' loop.
+    getCommand                       -- Enter the main loop.
     
 
 -- IO: Await user command
