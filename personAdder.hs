@@ -3,7 +3,7 @@ module PersonAdder where
 import DataStructure
 import EditDeleteHandler
 import UserInteraction
-
+import XmlWriter
 
 -- IO: Add a new person to the phone book.
 
@@ -21,6 +21,10 @@ doAdd pb = do
             address = [],
             dob = ""
         }
+        
+        savePhoneBook (newPerson:pb)
+        
+        putStrLn $ "Added. Edit " ++ newName ++ "'s details"
         
         editPerson (newPerson:pb) newPerson
     else 

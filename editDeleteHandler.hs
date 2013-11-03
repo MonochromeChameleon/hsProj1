@@ -3,6 +3,7 @@ module EditDeleteHandler where
 import Data.Char
 
 import DataStructure
+import PrettyDisplay
 import SearchHandler
 import UserInteraction
 import XmlWriter
@@ -18,8 +19,97 @@ doEdit = searchPrompt "Edit" editPerson
 
 editPerson :: PhoneBook -> Person -> IO()
 editPerson pb person = do
-    putStrLn "No No No"
+    showPerson person
 
+    putStrLn "What do you want to edit?"
+    putStrLn "1: Name"
+    putStrLn "2: Phone numbers"
+    putStrLn "3: Address"
+    putStrLn "4: DoB"
+
+    cmd <- prompt "Edit"
+    
+    case cmd of
+        "1" -> editName pb person
+        "2" -> editPhones pb person
+        "3" -> editAddress pb person
+        "4" -> editDoB pb person
+        otherwise -> putStr ""
+        
+editName :: PhoneBook -> Person -> IO()
+editName pb person = do
+    nm <- prompt "Name"
+    
+    let newPerson = Person {
+        name = nm,
+        phones = (phones person),
+        address = (address person),
+        dob = (dob person)
+    }
+    
+    let newPhoneBook = newPerson:(filter (/= person) pb)
+    savePhoneBook newPhoneBook
+    
+    editPerson newPhoneBook newPerson
+
+editPhones :: PhoneBook -> Person -> IO()
+editPhones pb person = do
+    phoneType <- inlinePrompt "Phone Type"
+    phoneNumber <- prompt $ (capitalize phoneType) ++ " Number"
+    
+    let phone = (phoneType, phoneNumber)
+    
+    let newPhoneList = phone:(filter (\x -> (fst x) /= phoneType) (phones person))
+    let newPerson = Person {
+        name = (name person),
+        phones = newPhoneList,
+        address = (address person),
+        dob = (dob person)
+    }
+    
+    let newPhoneBook = newPerson:(filter (/= person) pb)
+    savePhoneBook newPhoneBook
+    
+    editPerson newPhoneBook newPerson
+
+
+editAddress :: PhoneBook -> Person -> IO()
+editAddress pb person = do
+    line1 <- inlinePrompt "Line 1"
+    line2 <- inlinePrompt "Line 2"
+    postcode <- inlinePrompt "Postcode"
+    city <- prompt "City"
+    
+    let newAddress = filter (\x -> snd x /= "") [("line1", line1), ("line2", line2), ("postcode", postcode), ("city", city)]
+    
+    let newPerson = Person {
+        name = (name person),
+        phones = (phones person),
+        address = newAddress,
+        dob = (dob person)
+    }
+    
+    let newPhoneBook = newPerson:(filter (/= person) pb)
+    savePhoneBook newPhoneBook
+    
+    editPerson newPhoneBook newPerson
+
+
+editDoB :: PhoneBook -> Person -> IO()
+editDoB pb person = do
+    d <- prompt "DoB"
+    
+    let newPerson = Person {
+        name = (name person),
+        phones = (phones person),
+        address = (address person),
+        dob = d
+    }
+    
+    let newPhoneBook = newPerson:(filter (/= person) pb)
+    savePhoneBook newPhoneBook
+    
+    editPerson newPhoneBook newPerson
 
 -- IO: Start delete process - prompt for a name and handle results appropriately
 
@@ -93,15 +183,3 @@ verifyPrompt verb callback pb people = do
         else do
             putStrLn "No changes made"
             putStrLn ""
-
-
--- IO: Display a numbered list of people
-
-listNames :: PhoneBook -> IO()
-listNames = listNamesRec 0 -- Call through to the recursive function with index 0
-
-listNamesRec :: Integer -> PhoneBook -> IO ()
-listNamesRec _ [] = putStr ""
-listNamesRec ix (person:people) = do
-    putStrLn $ (show (ix + 1)) ++ ": " ++ (name person)
-    listNamesRec (ix + 1) people

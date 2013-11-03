@@ -1,5 +1,6 @@
 import Control.Monad
 import Data.Char
+import System.Directory
 import System.IO
 
 import DataStructure
@@ -11,6 +12,7 @@ import SearchHandler
 import UserInteraction
 import XmlWriter
 
+main :: IO()
 main = do 
     hSetBuffering stdout NoBuffering -- Lets us have a nice custom prompt so it's easier to know what you're doing.
     showHelp                         -- Display help text on startup, then go into the primary 'getCommand' loop.
@@ -18,8 +20,15 @@ main = do
     
 
 -- IO: Await user command
-
+getCommand :: IO()
 getCommand = do
+    -- If we have written to a temp file, we want to overwrite the actual file (this is to get around conflicting file handles)
+    fileExists <- doesFileExist ".phoneBook"
+    if (fileExists) then
+        renameFile ".phoneBook" "phoneBook.xml"
+    else 
+        putStr "" -- no-op in the else block
+    
     xs <- readFile "phoneBook.xml" -- Reload the phone book each time through the loop in case we have edited it
     let pb = readPhoneBook xs
 

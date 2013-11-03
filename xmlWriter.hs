@@ -1,6 +1,7 @@
 module XmlWriter where
 
 import DataStructure
+import Data.List
 
 -- Utility method - takes the tag name and content as a string and returns a full XML tag, provided there is content to include.
 xout :: String -> String -> String
@@ -40,7 +41,7 @@ writePhoneBook ps = concat (map writePerson ps)
 
 savePhoneBook :: PhoneBook -> IO()
 savePhoneBook pb = do
-    writeFile "phoneBook.xml" $ writePhoneBook pb
+    writeFile ".phoneBook" $ writePhoneBook $ sort pb
 
 -- IO: Show XML on-screen
     

@@ -1,7 +1,12 @@
 -- Handles readable output of phone book entries
 module PrettyDisplay where
 
+import Data.Char
 import DataStructure
+
+
+capitalize :: String -> String
+capitalize str = toUpper (str!!0):(tail str) 
 
 
 -- IO: Recursive handler for displaying the entire phone book
@@ -46,7 +51,7 @@ showPerson person = do
 showPhones :: Phones -> IO()
 showPhones [] = do { putStr "" }
 showPhones (phone:phones) = do
-    putStrLn $ "  " ++ (fst phone) ++ ": " ++ (snd phone)
+    putStrLn $ "  " ++ (capitalize $ fst phone) ++ ": " ++ (snd phone)
     showPhones phones
 
 
@@ -58,3 +63,14 @@ showAddress (line:address) = do
     putStrLn $ "  " ++ snd line
     showAddress address
     
+
+-- IO: Display a numbered list of people
+
+listNames :: PhoneBook -> IO()
+listNames = listNamesRec 0 -- Call through to the recursive function with index 0
+
+listNamesRec :: Integer -> PhoneBook -> IO ()
+listNamesRec _ [] = putStr ""
+listNamesRec ix (person:people) = do
+    putStrLn $ (show (ix + 1)) ++ ": " ++ (name person)
+    listNamesRec (ix + 1) people

@@ -1,5 +1,7 @@
 module SearchHandler where
 
+import Data.Char
+
 import DataStructure
 import PrettyDisplay
 import UserInteraction
@@ -19,9 +21,9 @@ doSearch pb = do
 
 -- Initial substring search - returns all matching entries
 findPerson :: PhoneBook -> Name -> [Person]
-findPerson pb nm = (filter (\x -> take (length nm) (name x) == nm) pb)
+findPerson pb nm = (filter (\x -> (map toLower $ take (length nm) (name x)) == map toLower nm) pb)
 
 -- Returns whether any matches exist for the given initial substring
 inPhoneBook :: PhoneBook -> Name -> Bool
-inPhoneBook pb nm = length (filter (\x -> take (length nm) x == nm) (map name pb)) > 0
+inPhoneBook pb nm = length (filter (\x -> (map toLower $ take (length nm) x) == map toLower nm) (map name pb)) > 0
 
