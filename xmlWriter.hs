@@ -1,3 +1,4 @@
+-- Handles XML output of a phone book
 module XmlWriter (writePhoneBook) where
 
 import DataStructure
@@ -6,11 +7,15 @@ import DataStructure
 writePhoneBook :: PhoneBook -> String
 writePhoneBook ps = concat (map writePerson ps)
 
+---------------------
+-- Private methods --
+---------------------
+
 -- Output a person as XML
 writePerson :: Person -> String
 writePerson p = xout 0 "person" $ (xoutName p) ++ (xoutPhones p) ++ (xoutAddress p) ++ (xoutDoB p) ++ "\n"
 
--- Methods for outputting individual properties
+-- Output individual properties
 
 xoutName :: Person -> String
 xoutName p = xout 1 "name" (name p)

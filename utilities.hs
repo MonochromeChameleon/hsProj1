@@ -1,6 +1,9 @@
+-- Helper functions that don't really belong anywhere else
 module Utilities where
 
 import Data.Char
+import Data.List
+
 import DataStructure
 
 
@@ -36,23 +39,5 @@ listNamesRec _ [] = []
 listNamesRec ix (person:people) = ((show (ix + 1)) ++ ": " ++ (name person)):listNamesRec (ix + 1) people
 
 
------------------------------
--- Custom prompt functions --
------------------------------
-
-multilinePrompt :: String -> [String] -> IO String
-multilinePrompt promptName description = do
-    putLines description
-    prompt promptName
-
-prompt :: String -> IO String
-prompt str = do
-    input <- inlinePrompt str 
-    putStrLn ""
-    return input
-
-inlinePrompt :: String -> IO String
-inlinePrompt str = do
-    putStr $ (capitalize str) ++ " ~> "
-    input <- getLine
-    return input
+sortPhones :: Phones -> Phones
+sortPhones ps = sortBy (\x y -> compare (fst x) (fst y)) ps

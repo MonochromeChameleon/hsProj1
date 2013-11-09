@@ -7,6 +7,7 @@ import DataStructure
 import DataParser
 import PhoneBookIO
 import PrettyDisplay
+import Prompt
 import Utilities
 import XmlWriter
 

@@ -1,217 +1,145 @@
-module PhoneBookIO where
+-- Primary module for handling IO CRUD operations
+module PhoneBookIO (doAdd, doSearch, doEdit, doDelete) where
 
+import Data.Char
 import Data.List
 
 import DataStructure
+import CRUDUtils
 import PrettyDisplay
+import Prompt
 import Utilities
 import XmlWriter
 
--- IO: Execute a search and display prettified matching results
 
+-- IO: Write phone book back to a temporary file
+savePhoneBook :: PhoneBook -> IO()
+-- We write to a temporary file as this will avoid file handle conflicts. An alternative would be to pass
+-- a reference to the open file around from function to function, but that seems like it would result in
+-- unnecessary clutter throughout the codebase.
+savePhoneBook pb = writeFile ".phoneBook" $ writePhoneBook $ sort pb
+
+
+------------------------------------------------
+-------------------- Create --------------------
+------------------------------------------------
+
+-- IO: Add a new person to the phone book.
+doAdd :: PhoneBook -> IO()
+doAdd pb = do    
+    newName <- multilinePrompt "Add" ["Who would you like to add? (or press enter to cancel)"]
+    
+    if (length newName > 0) then do
+        -- If a name is provided, create a Person, and then defer through to the edit process to
+        -- populate them with more information.
+        putStrLn $ "Added. Edit " ++ newName ++ "'s details"
+        editPerson $ addPerson pb newName
+    else
+        -- Helpful feedback, then back to the main prompt.
+        putStrLn "No new entries added"
+
+
+------------------------------------------------
+--------------------- Read ---------------------
+------------------------------------------------
+
+-- IO: Execute a search and display prettified matching results
 doSearch :: PhoneBook -> IO()
 doSearch pb = do
     searchTerm <- multilinePrompt "Search" ["Who do you want to search for?"]
     
     if (inPhoneBook pb searchTerm) then
+        -- Display all the matching results in the console.
         putLines $ prettyPrintPhoneBook $ findPerson pb searchTerm
     else
+        -- Helpful feedback
         putStrLn "Not found"
-        
--- IO: Write to file
-
-savePhoneBook :: PhoneBook -> IO()
-savePhoneBook pb = writeFile ".phoneBook" $ writePhoneBook $ sort pb
 
 
--- IO: Add a new person to the phone book.
-
-doAdd :: PhoneBook -> IO()
-doAdd pb = do    
-    newName <- multilinePrompt "Add" ["Who would you like to add? (or press enter to cancel)"]
-    
-    -- If a name is provided, create a Person record, and then defer through to the edit process to add more information.
-    if (length newName > 0) then do
-        addResult <- addPerson pb newName
-
-        editPerson (snd addResult) (fst addResult)
-    else 
-        putStrLn "No new entries added"
-
-
-addPerson :: PhoneBook -> Name -> IO (Person, PhoneBook)
-addPerson pb nm = do
-    let newPerson = Person {
-        name = nm,
-        phones = [],
-        address = [],
-        dob = ""
-    }
-    
-    savePhoneBook (newPerson:pb)
-    
-    putStrLn $ "Added. Edit " ++ nm ++ "'s details"
-    
-    return (newPerson, newPerson:pb)
-
+------------------------------------------------
+-------------------- Update --------------------
+------------------------------------------------
 
 -- IO: Start the edit process - prompt for a name and handle results appropriately
-
 doEdit :: PhoneBook -> IO()
 doEdit = searchPrompt "edit" editPerson
 
 
 -- IO: Confirm and execute edit
-
-editPerson :: PhoneBook -> Person -> IO()
-editPerson pb person = do
-    putLines $ prettyPrint person
+editPerson :: (Person, PhoneBook) -> IO()
+editPerson (person, pb) = do
+    putLines $ prettyPrint person -- Display the current information
+    
+    -- Show edit instructions and await a command
     cmd <- multilinePrompt "Edit" ["What do you want to edit?", "1: Name", "2: Phone numbers", "3: Address", "4: DoB"]
 
     case cmd of
-        "1" -> editName pb person
-        "2" -> editPhones pb person
-        "3" -> editAddress pb person
-        "4" -> editDoB pb person
-        otherwise -> putStr ""
+        "1" -> doEditName pb person
+        "2" -> doEditPhones pb person
+        "3" -> doEditAddress pb person
+        "4" -> doEditDoB pb person
+        -- We only need to save when we're leaving this method, as we will be passing references around the rest of the time
+        otherwise -> savePhoneBook pb 
         
-editName :: PhoneBook -> Person -> IO()
-editName pb person = do
+
+-- IO: update the given person's name in the phone book and call back to editPerson
+doEditName :: PhoneBook -> Person -> IO()
+doEditName pb person = do
+    -- Get the updated name
     nm <- prompt "Name"
     
-    let newPerson = Person {
-        name = nm,
-        phones = (phones person),
-        address = (address person),
-        dob = (dob person)
-    }
-    
-    let newPhoneBook = newPerson:(filter (/= person) pb)
-    savePhoneBook newPhoneBook
-    
-    editPerson newPhoneBook newPerson
+    -- Call through to the editPerson method with the updated person and phone book
+    editPerson $ updatePersonName pb person nm
 
-editPhones :: PhoneBook -> Person -> IO()
-editPhones pb person = do
+
+-- IO: update the given person's phones in the phone book and call back to editPerson
+doEditPhones :: PhoneBook -> Person -> IO()
+doEditPhones pb person = do
+    -- Prompt for the phone type and number
     phoneType <- inlinePrompt "Phone Type"
     phoneNumber <- prompt $ (capitalize phoneType) ++ " Number"
     
-    let phone = (phoneType, phoneNumber)
-    
-    let newPhoneList = phone:(filter (\x -> (fst x) /= phoneType) (phones person))
-    let newPerson = Person {
-        name = (name person),
-        phones = newPhoneList,
-        address = (address person),
-        dob = (dob person)
-    }
-    
-    let newPhoneBook = newPerson:(filter (/= person) pb)
-    savePhoneBook newPhoneBook
-    
-    editPerson newPhoneBook newPerson
+    -- Call through to the editPerson method with the updated person and phone book
+    editPerson $ addPersonPhone pb person (map toLower phoneType, phoneNumber)
 
 
-editAddress :: PhoneBook -> Person -> IO()
-editAddress pb person = do
-    line1 <- inlinePrompt "Line 1"
-    line2 <- inlinePrompt "Line 2"
-    postcode <- inlinePrompt "Postcode"
-    city <- prompt "City"
+-- IO: update the given person's address in the phone book and call back to editPerson
+doEditAddress :: PhoneBook -> Person -> IO()
+doEditAddress pb person = do
+    -- Prompt for the various address components in order
+    newAddress <- prompts ["line 1", "line 2", "postcode", "city"]
     
-    let newAddress = filter (\x -> snd x /= "") [("line1", line1), ("line2", line2), ("postcode", postcode), ("city", city)]
-    
-    let newPerson = Person {
-        name = (name person),
-        phones = (phones person),
-        address = newAddress,
-        dob = (dob person)
-    }
-    
-    let newPhoneBook = newPerson:(filter (/= person) pb)
-    savePhoneBook newPhoneBook
-    
-    editPerson newPhoneBook newPerson
+    -- Call through to the editPerson method with the updated person and phone book
+    editPerson $ updatePersonAddress pb person newAddress
 
 
-editDoB :: PhoneBook -> Person -> IO()
-editDoB pb person = do
-    d <- prompt "DoB"
+-- IO: update the given person's DoB in the phone book and call back to editPerson
+doEditDoB :: PhoneBook -> Person -> IO()
+doEditDoB pb person = do
+    -- Prompt for a DoB
+    dte <- prompt "DoB"
+
+    -- Call through to the editPerson method with the updated person and phone book
+    editPerson $ updatePersonDoB pb person dte
     
-    let newPerson = Person {
-        name = (name person),
-        phones = (phones person),
-        address = (address person),
-        dob = d
-    }
-    
-    let newPhoneBook = newPerson:(filter (/= person) pb)
-    savePhoneBook newPhoneBook
-    
-    editPerson newPhoneBook newPerson
+
+------------------------------------------------
+-------------------- Delete --------------------
+------------------------------------------------
 
 -- IO: Start delete process - prompt for a name and handle results appropriately
-
 doDelete :: PhoneBook -> IO()
 doDelete = searchPrompt "delete" confirmDeletePerson
 
 
 -- IO: Confirm and execute delete
+confirmDeletePerson :: (Person, PhoneBook) -> IO()
+confirmDeletePerson (person, pb) = do
 
-confirmDeletePerson :: PhoneBook -> Person -> IO()
-confirmDeletePerson pb person = do
-    putStrLn $ "Are you sure you want to delete " ++ (name person) ++ "? [y/N]"
-
-    response <- prompt "Delete"
+    response <- multilinePrompt "Delete" ["Are you sure you want to delete " ++ (name person) ++ "? [y/N]"]
     
     if (response == "y") then do
-        savePhoneBook $ filter (/= person) pb
+        savePhoneBook $ deletePerson pb person
         putStrLn "Deleted"
     else
         putStrLn "Not deleted"
-
-    putStrLn ""
-    
---------------------------------------------------------------------------------------------------------------
--- Commonised methods for the edit and delete processes - handle clarification and confirmation before passing
--- on to the appropriate callback.
---------------------------------------------------------------------------------------------------------------
-
--- IO: Ask who the user wants to [verb], and then pass through to the verification method
-
-searchPrompt :: String -> (PhoneBook -> Person -> IO()) -> PhoneBook -> IO()
-searchPrompt verb callback pb = do
-    -- Prompt for a user search
-    searchTerm <- multilinePrompt verb ["Who do you want to " ++ verb ++ "?"]
-
-    let matchingPeople = findPerson pb searchTerm
-    
-    if (length matchingPeople > 0) then
-        -- Handle the search results
-        verifyPrompt verb callback pb matchingPeople
-    else
-        putStrLn "No matches found"
-        
-
--- IO: Confirm which entry is to be acted upon and then pass that person back to the callback
-        
-verifyPrompt :: String -> (PhoneBook -> Person -> IO()) -> PhoneBook -> [Person] -> IO()
-verifyPrompt verb callback pb people = do
-    if (length people == 1) then do
-        -- No additional clarification required - go to the confirmation
-        putStrLn "One matching entry found:"
-        callback pb (people!!0)
-
-    else do
-        -- Multiple matches to the search, show a numbered list and ask which to delete
-        response <- multilinePrompt verb $ 
-            ["We found " ++ (show $ length people) ++ " matching entries:", ""] ++ 
-            listNames people ++ 
-            ["", "Which would you like to " ++ verb ++ (show [1..(length people)]), "Press any other key to cancel"]
-        
-        -- If the user input matches a valid index, go to the confirm, otherwise bail out.
-        -- Check the reponse string against the string values of valid indices, so as to avoid the need for string -> int parsing
-        if ((length $ filter (== response) (map show [1..(length people)])) > 0) then 
-            callback pb (people!!((read response :: Int) - 1))
-        else do
-            putLines ["No changes made", ""]

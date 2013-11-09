@@ -1,1 +1,53 @@
-<person><name>Helena Smith</name><address><line1>Flat 8 New Tower Block</line1><postcode>E1 4NS</postcode><city>London</city></address></person><person><name>Hugh</name><phones><fax>012389284</fax><home>02072729113</home><mobile>07891898119</mobile></phones><address><line1>Somewhere</line1><line2>Over the rainbow</line2><city>Way up high</city></address><dob>25/02/1982</dob></person><person><name>John Sorensen</name><phones><mobile>07773459876</mobile><home>020824566756</home></phones><dob>07/08/1974</dob></person><person><name>Someone</name><phones><mobile>012798575528</mobile><home>0285735873</home><fax>384275838838</fax></phones><address><line1>Somewhere</line1><line2>Over the rainbow</line2><city>Way up high</city></address><dob>12/12/12</dob></person><person><name>Steven McOwen</name><phones><mobile>07773459885</mobile></phones></person>
+
+<person>
+    <name>Helena Smith</name>
+    <address>
+        <line1>Flat 8 New Tower Block</line1>
+        <postcode>E1 4NS</postcode>
+        <city>London</city>
+    </address>
+</person>
+<person>
+    <name>Hugh</name>
+    <phones>
+        <fax>012389284</fax>
+        <home>02072729113</home>
+        <mobile>07891898119</mobile>
+        <pager>7583928575663</pager>
+        <tree>593784242</tree>
+    </phones>
+    <address>
+        <line1>Somewhere</line1>
+        <line2>Over the rainbow</line2>
+        <city>Way up high</city>
+    </address>
+    <dob>25/02/1982</dob>
+</person>
+<person>
+    <name>John Sorensen</name>
+    <phones>
+        <mobile>07773459876</mobile>
+        <home>020824566756</home>
+    </phones>
+    <dob>07/08/1974</dob>
+</person>
+<person>
+    <name>Someone</name>
+    <phones>
+        <mobile>012798575528</mobile>
+        <home>0285735873</home>
+        <fax>384275838838</fax>
+    </phones>
+    <address>
+        <line1>Somewhere</line1>
+        <line2>Over the rainbow</line2>
+        <city>Way up high</city>
+    </address>
+    <dob>12/12/12</dob>
+</person>
+<person>
+    <name>Steven McOwen</name>
+    <phones>
+        <mobile>07773459885</mobile>
+    </phones>
+</person>

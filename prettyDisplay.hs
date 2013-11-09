@@ -27,7 +27,7 @@ prettyPrintName p = [name p, ""] -- trailing line break
 
 -- Build a list of phone strings if any numbers are stored
 prettyPrintPhones :: Person -> [String]
-prettyPrintPhones p = if (count > 0) then getPhoneStrings $ phones p else []
+prettyPrintPhones p = if (count > 0) then getPhoneStrings $ sortPhones $ phones p else []
     where count = length $ phones p
 
 -- Recursively build phone strings as 'description: number'
