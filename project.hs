@@ -46,9 +46,10 @@ showHelp = putLines [
     "    s: Search entries",
     "    p: Print entire phone book",
     "    a: Add entry",
-    "    d: Delete entry",
     "    e: Edit an entry",
+    "    d: Delete entry",
     "    x: Show phone book as xml",
+    "",
     "    h: Show this help",
     "",
     "Press enter to exit",
@@ -64,8 +65,8 @@ executeCommand pb cmd = do
         's' -> doSearch pb
         'p' -> putLines $ prettyPrintPhoneBook pb
         'a' -> doAdd pb
-        'd' -> doDelete pb
         'e' -> doEdit pb
+        'd' -> doDelete pb
         'x' -> putStrLn $ writePhoneBook pb
         'h' -> showHelp
         otherwise -> putStrLn "Unknown command"

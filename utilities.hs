@@ -39,5 +39,14 @@ listNamesRec _ [] = []
 listNamesRec ix (person:people) = ((show (ix + 1)) ++ ": " ++ (name person)):listNamesRec (ix + 1) people
 
 
+-- Build a numbered list of a person's phone numbers
+listPhones :: Person -> [String]
+listPhones person = listPhonesRec 0 (phones person) -- Call through to the recursive function with index 0
+
+listPhonesRec :: Integer -> Phones -> [String]
+listPhonesRec _ [] = []
+listPhonesRec ix (phone:phones) = ((show (ix + 1)) ++ ": " ++ (capitalize $ fst phone) ++ " - " ++ (snd phone)):listPhonesRec (ix + 1) phones
+
+
 sortPhones :: Phones -> Phones
 sortPhones ps = sortBy (\x y -> compare (fst x) (fst y)) ps

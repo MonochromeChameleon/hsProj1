@@ -1,4 +1,4 @@
--- Primary module for handling IO CRUD operations
+-- Primary module for handling the IO side of CRUD operations
 module PhoneBookIO (doAdd, doSearch, doEdit, doDelete) where
 
 import Data.Char
@@ -27,7 +27,7 @@ savePhoneBook pb = writeFile ".phoneBook" $ writePhoneBook $ sort pb
 -- IO: Add a new person to the phone book.
 doAdd :: PhoneBook -> IO()
 doAdd pb = do    
-    newName <- multilinePrompt "Add" ["Who would you like to add? (or press enter to cancel)"]
+    newName <- multilinePrompt "Name" ["Who would you like to add?", "(press enter to cancel and return to the main menu)"]
     
     if (length newName > 0) then do
         -- If a name is provided, create a Person, and then defer through to the edit process to
@@ -71,7 +71,7 @@ editPerson (person, pb) = do
     putLines $ prettyPrint person -- Display the current information
     
     -- Show edit instructions and await a command
-    cmd <- multilinePrompt "Edit" ["What do you want to edit?", "1: Name", "2: Phone numbers", "3: Address", "4: DoB"]
+    cmd <- multilinePrompt "Edit" ["What do you want to edit?", "1: Name", "2: Phone numbers", "3: Address", "4: DoB", "Press any other key to return to the main menu"]
 
     case cmd of
         "1" -> doEditName pb person
@@ -90,18 +90,72 @@ doEditName pb person = do
     
     -- Call through to the editPerson method with the updated person and phone book
     editPerson $ updatePersonName pb person nm
+    
+    
+-- IO: ask whether the user wants to add, update or delete a phone number
+doEditPhones :: PhoneBook -> Person -> IO()
+doEditPhones phoneBook person = do
+    cmd <- multilinePrompt "Phone" ["Do you want to add, edit or delete a phone number?", "1: Add", "2: Edit", "3: Delete", "Press any other key to return to the edit menu"]
+    
+    case (toLower $ cmd!!0) of
+        '1' -> doAddPhone phoneBook person
+        'a' -> doAddPhone phoneBook person
+        '2' -> doEditPhone phoneBook person
+        'e' -> doEditPhone phoneBook person
+        '3' -> doDeletePhone phoneBook person
+        'd' -> doDeletePhone phoneBook person
+        otherwise -> editPerson (person, phoneBook) -- Go back out one level if they don't choose a valid option
 
 
 -- IO: update the given person's phones in the phone book and call back to editPerson
-doEditPhones :: PhoneBook -> Person -> IO()
-doEditPhones pb person = do
+doAddPhone :: PhoneBook -> Person -> IO()
+doAddPhone pb person = do
     -- Prompt for the phone type and number
     phoneType <- inlinePrompt "Phone Type"
     phoneNumber <- prompt $ (capitalize phoneType) ++ " Number"
     
     -- Call through to the editPerson method with the updated person and phone book
     editPerson $ addPersonPhone pb person (map toLower phoneType, phoneNumber)
+    
+    
+-- IO: edit an existing phone number
+doEditPhone :: PhoneBook -> Person -> IO()
+doEditPhone phoneBook person = do
+    cmd <- multilinePrompt "Phone" $ ["Which phone number do you want to edit?"] ++ listPhones person
+    
+    -- If the user input matches a valid index, go to the confirm, otherwise bail out.
+    -- Check the reponse string against the string values of valid indices, so as to avoid the need for string -> int parsing
+    if ((length $ filter (== cmd) (map show [1..(length (phones person))])) > 0) then do
+        let phone = (phones person)!!((read cmd :: Int) - 1)
+        phoneNumber <- prompt $ (capitalize $ fst phone) ++ " Number"
+        
+        -- Call through to the editPerson method with the updated person and phone book
+        editPerson $ addPersonPhone phoneBook person (fst phone, phoneNumber)
+    else
+        -- Invalid choice, so go back up to the edit menu
+        editPerson (person, phoneBook)
 
+
+-- IO: delete an existing phone number
+doDeletePhone :: PhoneBook -> Person -> IO()
+doDeletePhone phoneBook person = do
+    cmd <- multilinePrompt "Phone" $ ["Which phone number do you want to delete?"] ++ listPhones person
+    
+    -- If the user input matches a valid index, go to the confirm, otherwise bail out.
+    -- Check the reponse string against the string values of valid indices, so as to avoid the need for string -> int parsing
+    if ((length $ filter (== cmd) (map show [1..(length (phones person))])) > 0) then do
+        let phone = (phones person)!!((read cmd :: Int) - 1)
+
+        response <- multilinePrompt "Delete" ["Are you sure you want to delete " ++ (name person) ++ "'s " ++ (fst phone) ++ " number? [y/N]"]
+        
+        if response == "y" then
+            editPerson $ deletePersonPhone phoneBook person phone
+        else
+            -- Invalid choice, so go back up to the edit menu
+            editPerson (person, phoneBook)
+    else
+        -- Invalid choice, so go back up to the edit menu
+        editPerson (person, phoneBook)
 
 -- IO: update the given person's address in the phone book and call back to editPerson
 doEditAddress :: PhoneBook -> Person -> IO()

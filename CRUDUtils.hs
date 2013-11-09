@@ -1,5 +1,5 @@
 -- Handles the non-persistent (in-memory) manipulation of the phone book
-module CRUDUtils (addPerson, updatePersonName, addPersonPhone, updatePersonAddress, updatePersonDoB, deletePerson) where
+module CRUDUtils (addPerson, updatePersonName, addPersonPhone, deletePersonPhone, updatePersonAddress, updatePersonDoB, deletePerson) where
 
 import DataStructure
 import Utilities
@@ -28,6 +28,11 @@ addPersonPhone :: PhoneBook -> Person -> Phone -> (Person, PhoneBook)
 addPersonPhone phoneBook person phone = (newPerson, newPhoneBook)
     where newPerson = addPhoneNumber person phone
           newPhoneBook = replacePerson phoneBook person newPerson
+          
+deletePersonPhone :: PhoneBook -> Person -> Phone -> (Person, PhoneBook)
+deletePersonPhone phoneBook person phone = (newPerson, newPhoneBook)
+    where newPerson = deletePhoneNumber person phone
+          newPhoneBook = replacePerson phoneBook person newPerson
 
 
 updatePersonAddress :: PhoneBook -> Person -> Address -> (Person, PhoneBook)
@@ -44,6 +49,7 @@ updatePersonDoB phoneBook person date = (newPerson, newPhoneBook)
           
 deletePerson :: PhoneBook -> Person -> PhoneBook
 deletePerson phoneBook person = filter (/= person) phoneBook
+
 
 ------------------------
 -- Non-public methods --
@@ -69,6 +75,11 @@ addPhoneNumber :: Person -> Phone -> Person
 addPhoneNumber person phone = editPhones person newPhones
     where newPhones = phone:(filter (\x -> (fst x) /= (fst phone)) (phones person))
     
+
+deletePhoneNumber :: Person -> Phone -> Person
+-- Remove the given phone number from the person's list of phones
+deletePhoneNumber person phone = editPhones person newPhones
+    where newPhones = filter (\x -> x /= phone) (phones person)
 
 editAddress :: Person -> Address -> Person
 -- Update the address on the specified person and return the updated person

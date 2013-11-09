@@ -47,7 +47,7 @@ prompts (x:xs) = do
 searchPrompt :: String -> ((Person, PhoneBook) -> IO()) -> PhoneBook -> IO()
 searchPrompt verb callback phoneBook = do
     -- Prompt for a user search
-    searchTerm <- multilinePrompt verb ["Who do you want to " ++ verb ++ "?"]
+    searchTerm <- multilinePrompt verb ["Who do you want to " ++ verb ++ "?", "(press enter to show all entries)"]
 
     -- Determing which entries match the search term
     let matchingPeople = findPerson phoneBook searchTerm
@@ -73,7 +73,7 @@ verifyPrompt verb callback phoneBook people =
         response <- multilinePrompt verb $ 
             ["We found " ++ (show $ length people) ++ " matching entries:", ""] ++ 
             listNames people ++ 
-            ["", "Which would you like to " ++ verb ++ (show [1..(length people)]), "Press any other key to cancel"]
+            ["", "Which would you like to " ++ verb ++ "? " ++ (show [1..(length people)]), "(press any other key to cancel and return to the main menu)"]
         
         -- If the user input matches a valid index, go to the confirm, otherwise bail out.
         -- Check the reponse string against the string values of valid indices, so as to avoid the need for string -> int parsing
