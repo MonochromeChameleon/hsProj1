@@ -19,6 +19,7 @@ data Person = Person { name :: Name
                      , address :: Address
                      , dob :: DoB } deriving (Eq, Show)
                      
+-- Define ordering on Person records so that we can keep the phone book in alphabetical order.
 instance Ord Person where
     (<) p1 p2 = (<) (name p1) (name p2)
     (<=) p1 p2 = (<=) (name p1) (name p2)

@@ -1,34 +1,73 @@
-module EditDeleteHandler where
+module PhoneBookIO where
 
-import Data.Char
+import Data.List
 
 import DataStructure
 import PrettyDisplay
-import SearchHandler
-import UserInteraction
+import Utilities
 import XmlWriter
+
+-- IO: Execute a search and display prettified matching results
+
+doSearch :: PhoneBook -> IO()
+doSearch pb = do
+    searchTerm <- multilinePrompt "Search" ["Who do you want to search for?"]
+    
+    if (inPhoneBook pb searchTerm) then
+        putLines $ prettyPrintPhoneBook $ findPerson pb searchTerm
+    else
+        putStrLn "Not found"
+        
+-- IO: Write to file
+
+savePhoneBook :: PhoneBook -> IO()
+savePhoneBook pb = writeFile ".phoneBook" $ writePhoneBook $ sort pb
+
+
+-- IO: Add a new person to the phone book.
+
+doAdd :: PhoneBook -> IO()
+doAdd pb = do    
+    newName <- multilinePrompt "Add" ["Who would you like to add? (or press enter to cancel)"]
+    
+    -- If a name is provided, create a Person record, and then defer through to the edit process to add more information.
+    if (length newName > 0) then do
+        addResult <- addPerson pb newName
+
+        editPerson (snd addResult) (fst addResult)
+    else 
+        putStrLn "No new entries added"
+
+
+addPerson :: PhoneBook -> Name -> IO (Person, PhoneBook)
+addPerson pb nm = do
+    let newPerson = Person {
+        name = nm,
+        phones = [],
+        address = [],
+        dob = ""
+    }
+    
+    savePhoneBook (newPerson:pb)
+    
+    putStrLn $ "Added. Edit " ++ nm ++ "'s details"
+    
+    return (newPerson, newPerson:pb)
 
 
 -- IO: Start the edit process - prompt for a name and handle results appropriately
 
 doEdit :: PhoneBook -> IO()
-doEdit = searchPrompt "Edit" editPerson
+doEdit = searchPrompt "edit" editPerson
 
 
 -- IO: Confirm and execute edit
 
 editPerson :: PhoneBook -> Person -> IO()
 editPerson pb person = do
-    showPerson person
+    putLines $ prettyPrint person
+    cmd <- multilinePrompt "Edit" ["What do you want to edit?", "1: Name", "2: Phone numbers", "3: Address", "4: DoB"]
 
-    putStrLn "What do you want to edit?"
-    putStrLn "1: Name"
-    putStrLn "2: Phone numbers"
-    putStrLn "3: Address"
-    putStrLn "4: DoB"
-
-    cmd <- prompt "Edit"
-    
     case cmd of
         "1" -> editName pb person
         "2" -> editPhones pb person
@@ -114,7 +153,7 @@ editDoB pb person = do
 -- IO: Start delete process - prompt for a name and handle results appropriately
 
 doDelete :: PhoneBook -> IO()
-doDelete = searchPrompt "Delete" confirmDeletePerson
+doDelete = searchPrompt "delete" confirmDeletePerson
 
 
 -- IO: Confirm and execute delete
@@ -143,9 +182,7 @@ confirmDeletePerson pb person = do
 searchPrompt :: String -> (PhoneBook -> Person -> IO()) -> PhoneBook -> IO()
 searchPrompt verb callback pb = do
     -- Prompt for a user search
-    putStrLn $ "Who do you want to " ++ (map toLower verb) ++ "?"    
-
-    searchTerm <- prompt verb
+    searchTerm <- multilinePrompt verb ["Who do you want to " ++ verb ++ "?"]
 
     let matchingPeople = findPerson pb searchTerm
     
@@ -167,19 +204,14 @@ verifyPrompt verb callback pb people = do
 
     else do
         -- Multiple matches to the search, show a numbered list and ask which to delete
-        putStrLn $ "We found " ++ (show $ length people) ++ " matching entries:"
-        putStrLn ""
-        listNames people
-        putStrLn ""
-        putStrLn $ "Which would you like to " ++ (map toLower verb) ++ (show [1..(length people)])
-        putStrLn "Press any other key to cancel"
-        
-        response <- prompt verb
+        response <- multilinePrompt verb $ 
+            ["We found " ++ (show $ length people) ++ " matching entries:", ""] ++ 
+            listNames people ++ 
+            ["", "Which would you like to " ++ verb ++ (show [1..(length people)]), "Press any other key to cancel"]
         
         -- If the user input matches a valid index, go to the confirm, otherwise bail out.
         -- Check the reponse string against the string values of valid indices, so as to avoid the need for string -> int parsing
         if ((length $ filter (== response) (map show [1..(length people)])) > 0) then 
             callback pb (people!!((read response :: Int) - 1))
         else do
-            putStrLn "No changes made"
-            putStrLn ""
+            putLines ["No changes made", ""]

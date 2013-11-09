@@ -1,51 +1,37 @@
-module XmlWriter where
+module XmlWriter (writePhoneBook) where
 
 import DataStructure
-import Data.List
 
--- Utility method - takes the tag name and content as a string and returns a full XML tag, provided there is content to include.
-xout :: String -> String -> String
-xout t s = if s == "" then "" else "<" ++ t ++ ">" ++ s ++ "</" ++ t ++ ">"
+-- Output all entries as XML
+writePhoneBook :: PhoneBook -> String
+writePhoneBook ps = concat (map writePerson ps)
+
+-- Output a person as XML
+writePerson :: Person -> String
+writePerson p = xout 0 "person" $ (xoutName p) ++ (xoutPhones p) ++ (xoutAddress p) ++ (xoutDoB p) ++ "\n"
 
 -- Methods for outputting individual properties
 
 xoutName :: Person -> String
-xoutName p = xout "name" (name p)
+xoutName p = xout 1 "name" (name p)
 
 xoutPhone :: Phone -> String
-xoutPhone (t, n) = xout t n
+xoutPhone (t, n) = xout 2 t n
 
 xoutPhones :: Person -> String
-xoutPhones p = xout "phones" $ concat (map xoutPhone (phones p))
+xoutPhones p = if (length (phones p) > 0) then xout 1 "phones" $ concat (map xoutPhone (phones p)) ++ "\n    " else ""
 
 xoutAddressLine :: AddressLine -> String
-xoutAddressLine (t,l) = xout t l
+xoutAddressLine (t,l) = xout 2 t l
 
 xoutAddress :: Person -> String
-xoutAddress p = xout "address" $ concat (map xoutAddressLine (address p))
+xoutAddress p = if (length (address p) > 0) then xout 1 "address" $ concat (map xoutAddressLine (address p)) ++ "\n    " else ""
 
 xoutDoB :: Person -> String
-xoutDoB p = xout "dob" (dob p)
+xoutDoB p = xout 1 "dob" (dob p)
 
--- Output a whole person
-
-writePerson :: Person -> String
-writePerson p = xout "person" $ (xoutName p) ++ (xoutPhones p) ++ (xoutAddress p) ++ (xoutDoB p)
-
--- Output all entries
-
-writePhoneBook :: PhoneBook -> String
-writePhoneBook ps = concat (map writePerson ps)
-
--- IO: Write to file
-
-savePhoneBook :: PhoneBook -> IO()
-savePhoneBook pb = do
-    writeFile ".phoneBook" $ writePhoneBook $ sort pb
-
--- IO: Show XML on-screen
-    
-displayXml :: PhoneBook -> IO()
-displayXml pb = do
-    putStrLn $ writePhoneBook pb
-    putStrLn ""
+-- Utility method - takes the tag name and content as a string and returns a full XML tag, provided there is content to include.
+xout :: Int -> String -> String -> String
+xout indentation tagName content = 
+    if content == "" then "" 
+    else "\n" ++ (replicate (indentation * 4) ' ') ++ "<" ++ tagName ++ ">" ++ content ++ "</" ++ tagName ++ ">"

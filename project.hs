@@ -5,11 +5,9 @@ import System.IO
 
 import DataStructure
 import DataParser
-import EditDeleteHandler
-import PersonAdder
+import PhoneBookIO
 import PrettyDisplay
-import SearchHandler
-import UserInteraction
+import Utilities
 import XmlWriter
 
 main :: IO()
@@ -22,12 +20,10 @@ main = do
 -- IO: Await user command
 getCommand :: IO()
 getCommand = do
-    -- If we have written to a temp file, we want to overwrite the actual file (this is to get around conflicting file handles)
+    -- Use a temporary file and rename it in the run loop rather than passing file handles through the entire 
+    -- system. This bypasses conflicting file access problems.
     fileExists <- doesFileExist ".phoneBook"
-    if (fileExists) then
-        renameFile ".phoneBook" "phoneBook.xml"
-    else 
-        putStr "" -- no-op in the else block
+    when fileExists $ renameFile ".phoneBook" "phoneBook.xml"
     
     xs <- readFile "phoneBook.xml" -- Reload the phone book each time through the loop in case we have edited it
     let pb = readPhoneBook xs
@@ -36,26 +32,26 @@ getCommand = do
 
     when (not $ null line) $ do
         executeCommand pb line
-        getCommand
+        getCommand -- run loop
 
 
 -- IO: Display help text
 
 showHelp :: IO()
-showHelp = do
-    putStrLn "Welcome to the Vig, Nits and Hugh phone book program"
-    putStrLn ""
-    putStrLn "Available commands:"
-    putStrLn "    s: Search entries"
-    putStrLn "    p: Print entire phone book"
-    putStrLn "    a: Add entry"
-    putStrLn "    d: Delete entry"
-    putStrLn "    e: Edit an entry"
-    putStrLn "    x: Show phone book as xml"
-    putStrLn "    h: Show this help"
-    putStrLn ""
-    putStrLn "Press enter to exit"
-    putStrLn ""
+showHelp = putLines [
+    "Welcome to the Vig, Nits and Hugh phone book program",
+    "",
+    "Available commands:",
+    "    s: Search entries",
+    "    p: Print entire phone book",
+    "    a: Add entry",
+    "    d: Delete entry",
+    "    e: Edit an entry",
+    "    x: Show phone book as xml",
+    "    h: Show this help",
+    "",
+    "Press enter to exit",
+    ""]
     
     
 -- IO: Execute apppropriate command given first character at the PhoneBook prompt
@@ -65,10 +61,11 @@ executeCommand pb cmd = do
     -- Case-insensitive just to make life easier
     case (toLower $ cmd!!0) of
         's' -> doSearch pb
-        'p' -> showPhoneBook pb
+        'p' -> putLines $ prettyPrintPhoneBook pb
         'a' -> doAdd pb
         'd' -> doDelete pb
         'e' -> doEdit pb
-        'x' -> displayXml pb
+        'x' -> putStrLn $ writePhoneBook pb
         'h' -> showHelp
         otherwise -> putStrLn "Unknown command"
+    
